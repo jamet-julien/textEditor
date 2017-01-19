@@ -1021,12 +1021,11 @@
 	          oDomCursor = document.createElement('span');
 
 	      oDomSelect.className = 'js-editor_select';
-	      oDomCursor.className = 'js-editor_cursor';
+
 
 	      oDomSelect.textContent = sText;
-	      oDomSelect.insertAdjacentElement('afterbegin', oDomCursor);
 
-	      oDomCursor.appendChild(this._oTool);
+	      oDomSelect.appendChild(this._oTool);
 
 	      return oDomSelect;
 	    }
