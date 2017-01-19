@@ -36,6 +36,7 @@
         .js-editor_tool.open{
             transform   : translate3d( 0, -100%, 0);
             opacity     : 1;
+
         }
             .js-editor_item{
                 display      : inline-block;

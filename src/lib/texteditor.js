@@ -12,6 +12,10 @@ class TextEditor{
     this._bReady      = true;
     this._oLastSelect = {node : null, text : ''};
 
+    this._aTool       = [];
+
+    this._aWeakShow   = new WeakMap();
+
     this._oTool  = null;
   }
 
@@ -21,7 +25,11 @@ class TextEditor{
    *
    */
   addTool( sName , fIsShow, fOnClick ){
-
+    this._aTool.push( {
+        name    : sName,
+        isShow  : fIsShow.bind( this),
+        onClick : fOnClick.bind( this)
+    });
   }
 
   /**
@@ -55,15 +63,26 @@ class TextEditor{
     return oSelectionReturn;
   }
 
+  /**
+   *
+   */
   _buildTool(){
     var oUl  = document.createElement('ul'),
         oLi  = null,
-        iLen = 4;
+        iLen = this._aTool.length;
 
     oUl.className = 'js-editor_tool';
     for(; iLen-- ;){
       oLi = document.createElement( 'li');
-      oLi.className = 'js-editor_item';
+      oLi.className = 'js-editor_item '+this._aTool[ iLen ];
+
+      oLi.addEventListener( 'mousedown', (e)=>{
+        e.preventDefault();
+        this._aTool[ iLen ].onClick();
+      }, false);
+
+      this._aWeakShow.set( oLi, this._aTool[ iLen ].isShow);
+
       oUl.appendChild( oLi);
     }
 
@@ -126,10 +145,28 @@ class TextEditor{
 
   }
 
+
+  _filterTool( sSelect, oTarget){
+    var aChild = [].slice.call( this._oTool.childNodes),
+        iLen   = aChild.length,
+        fCall  = () => false ;
+
+    for (;iLen--;){
+      if( aChild[ iLen]){
+          fCall = this._aWeakShow.get( aChild[ iLen]);
+          if( !fCall.apply( this, [sSelect, oTarget])){
+            aChild[ iLen].style.display= 'none';
+          }else{
+            aChild[ iLen].style.display= 'inline-block';
+          }
+      }
+    }
+  }
+
   /**
    *
    */
-  _computeSelectZone( oSelect){
+  _computeSelectZone( oSelect, oTarget){
 
     var oElementSelect = this._buildSelect( String( oSelect));
 
@@ -138,6 +175,8 @@ class TextEditor{
 
     this._oLastSelect.node.deleteContents();
   	this._oLastSelect.node.insertNode( oElementSelect);
+
+    this._filterTool( this._oLastSelect.text, oTarget);
 
   }
 
@@ -148,7 +187,8 @@ class TextEditor{
      var oSelect = this._getSelection();
      this._cleanSelectZone();
      if( String( oSelect).trim() != '' && this._bReady){
-       this._computeSelectZone( oSelect);
+
+       this._computeSelectZone( oSelect, e.target);
 
        setTimeout(()=>{
          this._oTool.classList.add('open');
