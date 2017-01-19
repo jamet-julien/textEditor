@@ -1,0 +1,35 @@
+
+
+.js-editor_select{
+    color            : #CCC;
+    background-color : #333;
+    position         : relative;
+}
+    .js-editor_cursor{
+        position : relative;
+    }
+
+        .js-editor_tool{
+            list-style       : none;
+            display          : flex;
+            padding          : 0;
+            position         : absolute;
+            top              : 0;
+            left             : 0;
+            transform-origin : center;
+            transform        : translate3d(0, -100%, 0);
+            opacity          : 0;
+            transition       : all .3s;
+        }
+
+        .js-editor_tool.open{
+            transform   : translate3d( 0, -200%, 0);
+            opacity     : 1;
+        }
+            .js-editor_item{
+                display    : inline-block;
+                width      : 15px;
+                height     : 15px;
+                background : red;
+                padding    : 0;
+            }
