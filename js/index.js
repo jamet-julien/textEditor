@@ -920,14 +920,12 @@
 
 	function onClick() {
 	  var oDom = document.createElement('strong');
-	  oDom.textContent = String(this.selection);
+	  oDom.textContent = this.selection;
 	  this.replaceByNode(oDom);
-	  console.log('click');
 	}
 
 	function onClick2() {
-	  this.replaceByText('coucou');
-	  console.log('click');
+	  this.replaceByText('[b]' + this.selection + '[/b]');
 	}
 
 	var oEditor = new _texteditor2.default([].slice.call(document.querySelectorAll('.edit')));

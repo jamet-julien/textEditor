@@ -1,23 +1,37 @@
 import TextEditor from './lib/texteditor.js';
 
+/**
+ * [isShow description]
+ * @return {Boolean} [description]
+ */
 function isShow(){
   return true;
 }
 
+/**
+ * [isShow2 description]
+ * @return {Boolean} [description]
+ */
 function isShow2(){
   return this.selection.length > 4;
 }
 
+/**
+ * [onClick description]
+ * @return {[type]} [description]
+ */
 function onClick(){
   var oDom         = document.createElement('strong');
-  oDom.textContent = String( this.selection);
+  oDom.textContent = this.selection;
   this.replaceByNode( oDom);
-  console.log( 'click');
 }
 
+/**
+ * [onClick2 description]
+ * @return {[type]} [description]
+ */
 function onClick2(){
-  this.replaceByText( 'coucou');
-  console.log( 'click');
+  this.replaceByText( '[b]'+this.selection+'[/b]');
 }
 
 
