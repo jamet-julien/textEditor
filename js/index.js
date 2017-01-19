@@ -910,23 +910,31 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var isShow = function isShow(text, target) {
+	function isShow() {
 	  return true;
-	};
+	}
 
-	var isShow2 = function isShow2(text, target) {
-	  return text.length > 4;
-	};
+	function isShow2() {
+	  return this.selection.length > 4;
+	}
 
-	var onClick = function onClick() {
-	  return 'new texte';
-	};
+	function onClick() {
+	  var oDom = document.createElement('strong');
+	  oDom.textContent = String(this.selection);
+	  this.replaceByNode(oDom);
+	  console.log('click');
+	}
+
+	function onClick2() {
+	  this.replaceByText('coucou');
+	  console.log('click');
+	}
 
 	var oEditor = new _texteditor2.default([].slice.call(document.querySelectorAll('.edit')));
 
 	oEditor.addTool('color', isShow, onClick);
 
-	oEditor.addTool('color2', isShow2, onClick);
+	oEditor.addTool('color2', isShow2, onClick2);
 
 	oEditor.launch();
 
@@ -957,9 +965,30 @@
 	    this._aWeakShow = new WeakMap();
 
 	    this._oTool = null;
+	    this._oDomTarget = null;
+	    this._oCurrentElementSelect = null;
+
+	    this.selection = '';
+	    this.target = null;
 	  }
 
 	  _createClass(TextEditor, [{
+	    key: 'replaceByNode',
+	    value: function replaceByNode(oElement) {
+	      if (this._oCurrentElementSelect !== null) {
+	        this.target.replaceChild(oElement, this._oCurrentElementSelect);
+	        this._oCurrentElementSelect = null;
+	      }
+	    }
+	  }, {
+	    key: 'replaceByText',
+	    value: function replaceByText(sText) {
+	      if (this._oCurrentElementSelect !== null) {
+	        this.target.replaceChild(document.createTextNode(sText), this._oCurrentElementSelect);
+	        this._oCurrentElementSelect = null;
+	      }
+	    }
+	  }, {
 	    key: 'addTool',
 	    value: function addTool(sName, fIsShow, fOnClick) {
 	      this._aTool.push({
@@ -1002,13 +1031,16 @@
 
 	      oUl.className = 'js-editor_tool';
 	      for (; iLen--;) {
+
 	        oLi = document.createElement('li');
 	        oLi.className = 'js-editor_item ' + this._aTool[iLen];
 
-	        oLi.addEventListener('mousedown', function (e) {
-	          e.preventDefault();
-	          _this._aTool[iLen].onClick();
-	        }, false);
+	        oLi.addEventListener('mousedown', function (oDom) {
+	          return function () {
+	            oDom.onClick();
+	            _this._oLastSelect = { node: null, text: '' };
+	          };
+	        }(this._aTool[iLen]), false);
 
 	        this._aWeakShow.set(oLi, this._aTool[iLen].isShow);
 
@@ -1056,16 +1088,24 @@
 	    key: '_cleanSelectZone',
 	    value: function _cleanSelectZone() {
 
-	      if (this._oLastSelect.node) {
+	      if (this._oLastSelect.node !== null) {
+
+	        this.selection = '';
+	        this.target = null;
+
+	        this._oCurrentElementSelect = null;
 
 	        this._oTool.classList.remove('open');
 	        this._oLastSelect.node.deleteContents();
 	        this._oLastSelect.node.insertNode(document.createTextNode(this._oLastSelect.text));
+
+	        this._oLastSelect = { node: null, text: '' };
 	      }
 	    }
 	  }, {
 	    key: '_filterTool',
-	    value: function _filterTool(sSelect, oTarget) {
+	    value: function _filterTool() {
+
 	      var aChild = [].slice.call(this._oTool.childNodes),
 	          iLen = aChild.length,
 	          fCall = function fCall() {
@@ -1074,8 +1114,7 @@
 
 	      for (; iLen--;) {
 	        if (aChild[iLen]) {
-	          fCall = this._aWeakShow.get(aChild[iLen]);
-	          if (!fCall.apply(this, [sSelect, oTarget])) {
+	          if (!this._aWeakShow.get(aChild[iLen])()) {
 	            aChild[iLen].style.display = 'none';
 	          } else {
 	            aChild[iLen].style.display = 'inline-block';
@@ -1087,15 +1126,15 @@
 	    key: '_computeSelectZone',
 	    value: function _computeSelectZone(oSelect, oTarget) {
 
-	      var oElementSelect = this._buildSelect(String(oSelect));
+	      this._oCurrentElementSelect = this._buildSelect(String(oSelect));
 
 	      this._oLastSelect.node = oSelect.getRangeAt(0);
 	      this._oLastSelect.text = String(oSelect);
 
 	      this._oLastSelect.node.deleteContents();
-	      this._oLastSelect.node.insertNode(oElementSelect);
+	      this._oLastSelect.node.insertNode(this._oCurrentElementSelect);
 
-	      this._filterTool(this._oLastSelect.text, oTarget);
+	      this._filterTool();
 	    }
 	  }, {
 	    key: '_showTool',
@@ -1103,14 +1142,19 @@
 	      var _this2 = this;
 
 	      var oSelect = this._getSelection();
-	      this._cleanSelectZone();
+
 	      if (String(oSelect).trim() != '' && this._bReady) {
+
+	        this.selection = String(oSelect);
+	        this.target = e.target;
 
 	        this._computeSelectZone(oSelect, e.target);
 
 	        setTimeout(function () {
 	          _this2._oTool.classList.add('open');
 	        }, 10);
+	      } else {
+	        this._cleanSelectZone();
 	      }
 	    }
 	  }, {

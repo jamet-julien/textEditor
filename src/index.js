@@ -1,15 +1,23 @@
 import TextEditor from './lib/texteditor.js';
 
-const isShow = ( text, target) => {
+function isShow(){
   return true;
 }
 
-const isShow2 = ( text, target) => {
-  return text.length > 4;
+function isShow2(){
+  return this.selection.length > 4;
 }
 
-const onClick = () => {
-  return 'new texte';
+function onClick(){
+  var oDom         = document.createElement('strong');
+  oDom.textContent = String( this.selection);
+  this.replaceByNode( oDom);
+  console.log( 'click');
+}
+
+function onClick2(){
+  this.replaceByText( 'coucou');
+  console.log( 'click');
 }
 
 
@@ -24,7 +32,7 @@ oEditor.addTool(
 oEditor.addTool(
   'color2',
   isShow2,
-  onClick
+  onClick2
 );
 
 oEditor.launch();

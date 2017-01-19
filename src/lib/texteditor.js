@@ -16,9 +16,34 @@ class TextEditor{
 
     this._aWeakShow   = new WeakMap();
 
-    this._oTool  = null;
+    this._oTool                 = null;
+    this._oDomTarget            = null;
+    this._oCurrentElementSelect = null;
+
+    this.selection   = '';
+    this.target      = null;
+
   }
 
+  /**
+   *
+   */
+  replaceByNode( oElement){
+    if( this._oCurrentElementSelect !== null){
+      this.target.replaceChild( oElement, this._oCurrentElementSelect);
+      this._oCurrentElementSelect = null;
+    }
+  }
+
+  /**
+   * 
+   */
+  replaceByText( sText){
+    if( this._oCurrentElementSelect !== null){
+      this.target.replaceChild( document.createTextNode( sText), this._oCurrentElementSelect);
+      this._oCurrentElementSelect = null;
+    }
+  }
 
 
   /**
@@ -73,13 +98,16 @@ class TextEditor{
 
     oUl.className = 'js-editor_tool';
     for(; iLen-- ;){
-      oLi = document.createElement( 'li');
+
+      oLi           = document.createElement( 'li');
       oLi.className = 'js-editor_item '+this._aTool[ iLen ];
 
-      oLi.addEventListener( 'mousedown', (e)=>{
-        e.preventDefault();
-        this._aTool[ iLen ].onClick();
-      }, false);
+      oLi.addEventListener( 'mousedown', (( oDom)=>{
+        return ()=>{
+          oDom.onClick();
+          this._oLastSelect = {node : null, text : ''};
+        }
+      })(this._aTool[ iLen ]), false);
 
       this._aWeakShow.set( oLi, this._aTool[ iLen ].isShow);
 
@@ -134,27 +162,35 @@ class TextEditor{
    */
   _cleanSelectZone( ){
 
-    if( this._oLastSelect.node){
+    if( this._oLastSelect.node !== null){
+
+      this.selection   = '';
+      this.target      = null;
+
+      this._oCurrentElementSelect = null;
+
 
       this._oTool.classList.remove('open');
       this._oLastSelect.node.deleteContents();
       this._oLastSelect.node.insertNode(
         document.createTextNode( this._oLastSelect.text)
       );
+
+      this._oLastSelect = {node : null, text : ''};
     }
 
   }
 
 
-  _filterTool( sSelect, oTarget){
+  _filterTool(){
+
     var aChild = [].slice.call( this._oTool.childNodes),
         iLen   = aChild.length,
         fCall  = () => false ;
 
     for (;iLen--;){
       if( aChild[ iLen]){
-          fCall = this._aWeakShow.get( aChild[ iLen]);
-          if( !fCall.apply( this, [sSelect, oTarget])){
+          if( !this._aWeakShow.get( aChild[ iLen])()){
             aChild[ iLen].style.display= 'none';
           }else{
             aChild[ iLen].style.display= 'inline-block';
@@ -168,15 +204,15 @@ class TextEditor{
    */
   _computeSelectZone( oSelect, oTarget){
 
-    var oElementSelect = this._buildSelect( String( oSelect));
+    this._oCurrentElementSelect = this._buildSelect( String( oSelect));
 
     this._oLastSelect.node  = oSelect.getRangeAt( 0);
     this._oLastSelect.text  = String( oSelect);
 
     this._oLastSelect.node.deleteContents();
-  	this._oLastSelect.node.insertNode( oElementSelect);
+  	this._oLastSelect.node.insertNode( this._oCurrentElementSelect);
 
-    this._filterTool( this._oLastSelect.text, oTarget);
+    this._filterTool();
 
   }
 
@@ -185,8 +221,11 @@ class TextEditor{
    */
   _showTool( e){
      var oSelect = this._getSelection();
-     this._cleanSelectZone();
+
      if( String( oSelect).trim() != '' && this._bReady){
+
+       this.selection = String( oSelect);
+       this.target    = e.target;
 
        this._computeSelectZone( oSelect, e.target);
 
@@ -194,6 +233,8 @@ class TextEditor{
          this._oTool.classList.add('open');
        }, 10);
 
+     }else{
+       this._cleanSelectZone();
      }
   }
 
