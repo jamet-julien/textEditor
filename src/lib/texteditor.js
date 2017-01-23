@@ -8,20 +8,21 @@ class TextEditor{
    */
   constructor( mDom){
 
-    this._aDom        = this._computeDom( mDom);
-    this._bReady      = true;
-    this._oLastSelect = {node : null, text : ''};
+    this._aDom                  = this._computeDom( mDom);
+    this._bReady                = true;
+    this._bOnAction             = false;
+    this._oLastSelect           = {node : null, text : ''};
 
-    this._aTool       = [];
+    this._aTool                 = [];
 
-    this._aWeakShow   = new WeakMap();
+    this._aWeakShow             = new WeakMap();
 
     this._oTool                 = null;
     this._oDomTarget            = null;
     this._oCurrentElementSelect = null;
 
-    this.selection   = '';
-    this.target      = null;
+    this.selection              = '';
+    this.target                 = null;
 
   }
 
@@ -29,20 +30,23 @@ class TextEditor{
    *
    */
   replaceByNode( oElement){
-    if( this._oCurrentElementSelect !== null){
-      this.target.replaceChild( oElement, this._oCurrentElementSelect);
-      this._oCurrentElementSelect = null;
-    }
+    this._replaceSelection( oElement);
   }
 
   /**
-   * 
+   *
    */
   replaceByText( sText){
-    if( this._oCurrentElementSelect !== null){
-      this.target.replaceChild( document.createTextNode( sText), this._oCurrentElementSelect);
-      this._oCurrentElementSelect = null;
-    }
+    this._replaceSelection( document.createTextNode( sText));
+  }
+
+  /**
+   *
+   */
+  close(){
+    this._bReady      = true;
+    this._bOnAction   = false;
+    this._cleanSelectZone();
   }
 
 
@@ -50,11 +54,13 @@ class TextEditor{
    *
    */
   addTool( sName , fIsShow, fOnClick ){
+
     this._aTool.push( {
         name    : sName,
         isShow  : fIsShow.bind( this),
         onClick : fOnClick.bind( this)
     });
+
   }
 
   /**
@@ -91,6 +97,17 @@ class TextEditor{
   /**
    *
    */
+  _replaceSelection( oDom){
+    if( this._oCurrentElementSelect !== null){
+      this.target.replaceChild( oDom, this._oCurrentElementSelect);
+      this._oCurrentElementSelect = null;
+      this._oLastSelect = { node : null, text : ''};
+    }
+  }
+
+  /**
+   *
+   */
   _buildTool(){
     var oUl  = document.createElement('ul'),
         oLi  = null,
@@ -104,8 +121,8 @@ class TextEditor{
 
       oLi.addEventListener( 'mousedown', (( oDom)=>{
         return ()=>{
+          this._bOnAction  = true;
           oDom.onClick();
-          this._oLastSelect = {node : null, text : ''};
         }
       })(this._aTool[ iLen ]), false);
 
@@ -162,6 +179,8 @@ class TextEditor{
    */
   _cleanSelectZone( ){
 
+    this._oTool.classList.remove('open');
+
     if( this._oLastSelect.node !== null){
 
       this.selection   = '';
@@ -170,7 +189,6 @@ class TextEditor{
       this._oCurrentElementSelect = null;
 
 
-      this._oTool.classList.remove('open');
       this._oLastSelect.node.deleteContents();
       this._oLastSelect.node.insertNode(
         document.createTextNode( this._oLastSelect.text)
@@ -222,19 +240,22 @@ class TextEditor{
   _showTool( e){
      var oSelect = this._getSelection();
 
+     if( !this._bReady && !this._bOnAction){
+       this.close();
+     }
+
      if( String( oSelect).trim() != '' && this._bReady){
 
        this.selection = String( oSelect);
        this.target    = e.target;
+       this._bReady   = false;
 
        this._computeSelectZone( oSelect, e.target);
 
        setTimeout(()=>{
          this._oTool.classList.add('open');
-       }, 10);
+       }, 50);
 
-     }else{
-       this._cleanSelectZone();
      }
   }
 

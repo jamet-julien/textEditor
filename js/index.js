@@ -922,15 +922,27 @@
 	  var oDom = document.createElement('strong');
 	  oDom.textContent = this.selection;
 	  this.replaceByNode(oDom);
+	  this.close();
 	}
 
 	function onClick2() {
 	  this.replaceByText('[b]' + this.selection + '[/b]');
+	  this.close();
+	}
+
+	function onClickText() {
+	  var _this = this;
+
+	  setTimeout(function () {
+	    _this.close();
+	  }, 2000);
 	}
 
 	var oEditor = new _texteditor2.default([].slice.call(document.querySelectorAll('.edit')));
 
 	oEditor.addTool('color', isShow, onClick);
+
+	oEditor.addTool('text', isShow, onClickText);
 
 	oEditor.addTool('color2', isShow2, onClick2);
 
@@ -956,6 +968,7 @@
 
 	    this._aDom = this._computeDom(mDom);
 	    this._bReady = true;
+	    this._bOnAction = false;
 	    this._oLastSelect = { node: null, text: '' };
 
 	    this._aTool = [];
@@ -973,22 +986,24 @@
 	  _createClass(TextEditor, [{
 	    key: 'replaceByNode',
 	    value: function replaceByNode(oElement) {
-	      if (this._oCurrentElementSelect !== null) {
-	        this.target.replaceChild(oElement, this._oCurrentElementSelect);
-	        this._oCurrentElementSelect = null;
-	      }
+	      this._replaceSelection(oElement);
 	    }
 	  }, {
 	    key: 'replaceByText',
 	    value: function replaceByText(sText) {
-	      if (this._oCurrentElementSelect !== null) {
-	        this.target.replaceChild(document.createTextNode(sText), this._oCurrentElementSelect);
-	        this._oCurrentElementSelect = null;
-	      }
+	      this._replaceSelection(document.createTextNode(sText));
+	    }
+	  }, {
+	    key: 'close',
+	    value: function close() {
+	      this._bReady = true;
+	      this._bOnAction = false;
+	      this._cleanSelectZone();
 	    }
 	  }, {
 	    key: 'addTool',
 	    value: function addTool(sName, fIsShow, fOnClick) {
+
 	      this._aTool.push({
 	        name: sName,
 	        isShow: fIsShow.bind(this),
@@ -1019,6 +1034,15 @@
 	      return oSelectionReturn;
 	    }
 	  }, {
+	    key: '_replaceSelection',
+	    value: function _replaceSelection(oDom) {
+	      if (this._oCurrentElementSelect !== null) {
+	        this.target.replaceChild(oDom, this._oCurrentElementSelect);
+	        this._oCurrentElementSelect = null;
+	        this._oLastSelect = { node: null, text: '' };
+	      }
+	    }
+	  }, {
 	    key: '_buildTool',
 	    value: function _buildTool() {
 	      var _this = this;
@@ -1035,8 +1059,8 @@
 
 	        oLi.addEventListener('mousedown', function (oDom) {
 	          return function () {
+	            _this._bOnAction = true;
 	            oDom.onClick();
-	            _this._oLastSelect = { node: null, text: '' };
 	          };
 	        }(this._aTool[iLen]), false);
 
@@ -1086,6 +1110,8 @@
 	    key: '_cleanSelectZone',
 	    value: function _cleanSelectZone() {
 
+	      this._oTool.classList.remove('open');
+
 	      if (this._oLastSelect.node !== null) {
 
 	        this.selection = '';
@@ -1093,7 +1119,6 @@
 
 	        this._oCurrentElementSelect = null;
 
-	        this._oTool.classList.remove('open');
 	        this._oLastSelect.node.deleteContents();
 	        this._oLastSelect.node.insertNode(document.createTextNode(this._oLastSelect.text));
 
@@ -1141,18 +1166,21 @@
 
 	      var oSelect = this._getSelection();
 
+	      if (!this._bReady && !this._bOnAction) {
+	        this.close();
+	      }
+
 	      if (String(oSelect).trim() != '' && this._bReady) {
 
 	        this.selection = String(oSelect);
 	        this.target = e.target;
+	        this._bReady = false;
 
 	        this._computeSelectZone(oSelect, e.target);
 
 	        setTimeout(function () {
 	          _this2._oTool.classList.add('open');
-	        }, 10);
-	      } else {
-	        this._cleanSelectZone();
+	        }, 50);
 	      }
 	    }
 	  }, {

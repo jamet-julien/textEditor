@@ -24,6 +24,7 @@ function onClick(){
   var oDom         = document.createElement('strong');
   oDom.textContent = this.selection;
   this.replaceByNode( oDom);
+  this.close();
 }
 
 /**
@@ -32,6 +33,17 @@ function onClick(){
  */
 function onClick2(){
   this.replaceByText( '[b]'+this.selection+'[/b]');
+  this.close();
+}
+
+/**
+ * [onClick2 description]
+ * @return {[type]} [description]
+ */
+function onClickText(){
+  setTimeout(()=>{
+    this.close();
+  }, 2000);
 }
 
 
@@ -41,6 +53,13 @@ oEditor.addTool(
   'color',
   isShow,
   onClick
+);
+
+
+oEditor.addTool(
+  'text',
+  isShow,
+  onClickText
 );
 
 oEditor.addTool(

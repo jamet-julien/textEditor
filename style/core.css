@@ -1,7 +1,12 @@
-
+.edit::selection {
+    background-color : #333;
+    color            : #fff;
+}
 
 .js-editor_select{
-    position : relative;
+    position         : relative;
+    background-color : #333;
+    color            : #fff;
 }
 
     .js-editor_cursor{
