@@ -1,6 +1,3 @@
-
-
-
 class TextEditor{
 
   /**
@@ -53,13 +50,18 @@ class TextEditor{
   /**
    *
    */
-  addTool( sName , fIsShow, fOnClick ){
+  addTool( obj){
 
-    this._aTool.push( {
-        name    : sName,
-        isShow  : fIsShow.bind( this),
-        onClick : fOnClick.bind( this)
-    });
+    if(obj){
+
+      this._aTool.push( {
+          class   : obj.classname || '',
+          isShow  : (obj.show  || function(){ return true;}).bind( this),
+          onClick : (obj.click || function(){ this.close();}).bind( this),
+          content : obj.content || ''
+      });
+
+    }
 
   }
 
@@ -111,13 +113,28 @@ class TextEditor{
   _buildTool(){
     var oUl  = document.createElement('ul'),
         oLi  = null,
+        sampleNode  = null,
         iLen = this._aTool.length;
 
     oUl.className = 'js-editor_tool';
+
+    this._aTool.reverse();
+
     for(; iLen-- ;){
 
       oLi           = document.createElement( 'li');
-      oLi.className = 'js-editor_item '+this._aTool[ iLen ];
+      oLi.className = 'js-editor_item ' + this._aTool[ iLen ].classname;
+
+      if( this._aTool[ iLen ].content != ''){
+
+        sampleNode           = document.createElement('div');
+        sampleNode.innerHTML = this._aTool[ iLen ].content;
+
+        while( sampleNode.hasChildNodes()) {
+            oLi.appendChild( sampleNode.firstChild);
+        }
+
+      }
 
       oLi.addEventListener( 'mousedown', (( oDom)=>{
         return ()=>{
@@ -127,8 +144,8 @@ class TextEditor{
       })(this._aTool[ iLen ]), false);
 
       this._aWeakShow.set( oLi, this._aTool[ iLen ].isShow);
-
       oUl.appendChild( oLi);
+
     }
 
     return oUl;
@@ -265,7 +282,6 @@ class TextEditor{
   _addEvent( aDom){
     var iLen = aDom.length;
     for(;iLen--;) {
-
       if( aDom[ iLen ]){
         aDom[ iLen ].addEventListener( 'mouseup', this._showTool.bind( this));
       }
@@ -274,6 +290,3 @@ class TextEditor{
   }
 
 }
-
-
-export default TextEditor;
