@@ -22,7 +22,6 @@ class TextEditor{
     this.target                 = null;
 
   }
-
   /**
    *
    */

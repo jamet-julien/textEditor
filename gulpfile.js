@@ -18,6 +18,7 @@ gulp.task('js', (cb) => {
             presets: ['es2015']
         }),
 				uglify(),
+				rename( {suffix: ".min"}),
         gulp.dest('js/')
 		], cb
 	);
